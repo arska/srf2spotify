@@ -14,3 +14,7 @@ SPOTIPY_REDIRECT_URI='http://localhost/'
 * if you are missing some libraries add them with `sudo -H pip install <modulename>`
 * the script will ask you to authorize the client_id for your spotifyusername by visiting a spotify URL that will redirect to the URI above with the authorization code, e.g. http://localhost/?code=..., that you need to copy/paste to the script when it asks for it
 * the authorization will be saved in `.cache-<spotifyusername>`
+
+## result
+* http://podcasts.srf.ch/rock_special_mpx.xml
+* https://open.spotify.com/user/aarnoaukia/playlist/4Uxp8OaU8Fc06cjpQgZxdt
