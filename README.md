@@ -10,7 +10,7 @@ SPOTIPY_CLIENT_ID='<Client ID from above>'
 SPOTIPY_CLIENT_SECRET='<Client Secret from above>'
 SPOTIPY_REDIRECT_URI='http://localhost/'
 ```
-* run the script with =env $(cat .env | xargs) python srf2spotify.py <spotifyusername> <podcast feed url>= (see more options with -h)
-* if you are missing some libraries add them with =sudo -H pip install <modulename>=
-* the script will ask you to authorize the client_id for your spotifyusername by visiting a spotify URL that will redirect to the URI above with the authorization code, e.g. http://localhost/?code=..., that you need to copy/paste to the script.
+* run the script with `env $(cat .env | xargs) python srf2spotify.py <spotifyusername> <podcast feed url>` (see more options with -h)
+* if you are missing some libraries add them with `sudo -H pip install <modulename>`
+* the script will ask you to authorize the client_id for your spotifyusername by visiting a spotify URL that will redirect to the URI above with the authorization code, e.g. http://localhost/?code=..., that you need to copy/paste to the script when it asks for it
 * the authorization will be saved in ".cache-<spotifyusername>"
