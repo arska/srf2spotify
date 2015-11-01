@@ -110,8 +110,8 @@ def sync_feed_with_playlist(feed,spotifyusername,spotify,playlist_name=None,play
   logging.debug("spotify_get_all_trackids %s %s %s" % (spotifyusername,targetplaylist,spotify))
   for track in spotify_get_all_trackids(spotifyusername,targetplaylist,spotify):
     if track not in songs:
-      logging.info("removing %s from playlist" % track['uri'])
-      spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,track['uri'])
+      logging.info("removing %s from playlist" % track)
+      spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,[track])
     else:
       playlisttracks.append(track)
 
