@@ -16,5 +16,4 @@ SPOTIPY_REDIRECT_URI='http://localhost/'
 * the authorization will be saved in `.cache-<spotifyusername>`
 
 ## result
-* http://podcasts.srf.ch/rock_special_mpx.xml
-* https://open.spotify.com/user/aarnoaukia/playlist/4Uxp8OaU8Fc06cjpQgZxdt
+see cron.sh for examples
