@@ -18,4 +18,6 @@ SPOTIFY_USERNAME='<your spotify username>'
 * copy the contents of `.cache-<spotifyusername>` (`{"access_token": ...}`) into `SPOTIPY_CACHE='{"access_token": ...}'` in `.env` (this is only needed if you want to run it in a PaaS)
 
 ## result
-see cron.sh for examples
+* see cron.sh for examples
+* the examples are run daily on a heroku free instance
+* feel free to subscribe to the spotify playlists linked
