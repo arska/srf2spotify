@@ -15,7 +15,7 @@ SPOTIFY_USERNAME='<your spotify username>'
 ```
 * run the script with `env $(cat .env | xargs) python srf2spotify.py $SPOTIFY_USERNAME <podcast feed url>` (see more options with -h)
 * the script will ask you to authorize the client_id for your spotifyusername by visiting a spotify URL that will redirect to the URI above with the authorization code, e.g. http://localhost/?code=..., that you need to copy/paste to the script when it asks for it
-* copy the contents of `.cache-<spotifyusername>` (`{"access_token": ...}`) into `SPOTIPY_CACHE='{"access_token": ...}'` in `.env` (this is only needed if you want to run it in a PaaS)
+* copy the contents of `.cache-<spotifyusername>` (`{"access_token": ...}`) into `SPOTIPY_CACHE='{"access_token": ...}'` in `.env` (this is only needed if you want to run `heroku local`)
 
 ## result
 * see cron.sh for examples
