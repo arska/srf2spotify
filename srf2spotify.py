@@ -32,7 +32,7 @@ def main(argv=None):
   logging.debug("got args: %s" % args)
 
   token = spotipy.util.prompt_for_user_token(args.username,'playlist-modify-public')
-  logging.debug("go auth token %s" % token)
+  logging.debug("go auth token")
   spotify = spotipy.Spotify(auth=token)
   logging.debug("logged in to spotify")
 
