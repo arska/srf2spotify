@@ -13,3 +13,8 @@ python srf2spotify.py -v $SPOTIFY_USERNAME http://podcasts.srf.ch/sounds_mpx.xml
 
 python srf2spotify.py -v $SPOTIFY_USERNAME http://podcasts.srf.ch/rock_special_mpx.xml
 # https://open.spotify.com/user/$SPOTIFY_USERNAME/playlist/4Uxp8OaU8Fc06cjpQgZxdt
+
+python srf2spotify.py -v $SPOTIFY_USERNAME http://podcasts.srf.ch/ch_special_mpx.xml
+python srf2spotify.py -v $SPOTIFY_USERNAME http://podcasts.srf.ch/hitparade_mpx.xml
+python srf2spotify.py -v $SPOTIFY_USERNAME http://podcasts.srf.ch/reggae_special_mpx.xml
+python srf2spotify.py -v $SPOTIFY_USERNAME http://podcasts.srf.ch/world_music_special_mpx.xml
