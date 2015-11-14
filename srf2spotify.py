@@ -21,9 +21,10 @@ def main(argv=None):
   parser = argparse.ArgumentParser(description='Sync feed with spotify playlist')
   parser.add_argument('username',help='spotify username/account to sync the playlist to')
   parser.add_argument('feed',help='podcast feed URL, e.g. http://podcasts.srf.ch/rock_special_mpx.xml')
-  parser.add_argument('--id',required=False,default=None,help='spotify playlist ID to sync to. overrides the name below.')
-  parser.add_argument('--name',required=False,default=None,help='spotify playlist name to sync to. playlist is created if there is no such playlist. the podcast title is used if omitted.')
-  parser.add_argument('-v','--verbose',help='output debug logging',action='store_true')
+  parser.add_argument('--id',required=False,default=None,help='spotify playlist ID to sync to. overrides the playlist name below.')
+  parser.add_argument('--name',required=False,default=None,help='spotify playlist name to sync to. the playlist is created if there is no such playlist for the user. the podcast title is used if omitted.')
+  parser.add_argument('-v','--verbose',help='output debug logging',action='store_true',default=False)
+  parser.add_argument('-a','--add',help='only add songs to the playlist, dont remove them if missing from the feed',action='store_true',default=False)
   args = parser.parse_args()
 
   if args.verbose:
@@ -36,10 +37,10 @@ def main(argv=None):
   spotify = spotipy.Spotify(auth=token)
   logging.debug("logged in to spotify")
 
-  sync_feed_with_playlist(feed=args.feed,spotify=spotify,spotifyusername=args.username,playlist_name=args.name,playlist_id=args.id)
+  sync_feed_with_playlist(feed=args.feed,spotify=spotify,spotifyusername=args.username,playlist_name=args.name,playlist_id=args.id,addonly=args.add)
 
 
-def sync_feed_with_playlist(feed,spotifyusername,spotify,playlist_name=None,playlist_id=None):
+def sync_feed_with_playlist(feed,spotifyusername,spotify,playlist_name=None,playlist_id=None,addonly=False):
   """ Sync a SRF3 podcast feed with a spotify playlist
 
       Parameters:
@@ -48,6 +49,7 @@ def sync_feed_with_playlist(feed,spotifyusername,spotify,playlist_name=None,play
         - spotify - authenticated spotipy object, e.g. spotipy.Spotify(auth=spotipy.util.prompt_for_user_token(spotifyusername,'playlist-modify-public'))
         - playlist_id - spotify playlist to sync the feed to
         - playlist_name - name for the spotify playlist to create/update, if both id and name is empty the RSS feed title is used
+        - addonly - only add songs to the playlist, dont remove them from the playlist if missing from the feed
   """
   # first get the start/end dates for each episode from the podcast feed
   dates = get_datetime_from_podcast(feed)
@@ -110,8 +112,11 @@ def sync_feed_with_playlist(feed,spotifyusername,spotify,playlist_name=None,play
   logging.debug("spotify_get_all_trackids %s %s %s" % (spotifyusername,targetplaylist,spotify))
   for track in spotify_get_all_trackids(spotifyusername,targetplaylist,spotify):
     if track not in songs:
-      logging.info("removing %s from playlist" % track)
-      spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,[track])
+      if addonly:
+        logging.info("not removing %s since --add is specified" % track)
+      else:
+        logging.info("removing %s from playlist" % track)
+        spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,[track])
     else:
       playlisttracks.append(track)
 
