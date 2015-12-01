@@ -166,6 +166,19 @@ def spotify_search_songs(songs,spotify=spotipy.Spotify()):
       logging.info("no spotify track found for %s" % song)
   return results
 
+def get_radiorock_songlog(url="http://www.radiorock.fi/api/programdata/getlatest"):
+  """ Get the song log for radiorock.fi. Returns an array of dict with 'artist' and 'title' keys"""
+  filehandle = urllib2.urlopen(url)
+  data = filehandle.read()
+  filehandle.close()
+  data = json.loads(data)
+  songs = []
+  for song in data['result']:
+    date = datetime.datetime.fromtimestamp(song['timestamp']/1000)
+    logging.info("%s %s  %s %s" % (date,song['timestamp'],song['song'],song['artist']))
+    songs.append({'title': song['song'], 'artist': song['artist']})
+  return songs
+
 def get_jouluradio_songlog(url="http://www.jouluradio.fi/biisilista/jouluradiolast20.json"):
   """ Get the song log for jouluradio.fi. Returns an array of dict with 'artist' and 'title' keys"""
   filehandle = urllib2.urlopen(url)
