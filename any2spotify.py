@@ -16,9 +16,8 @@ import spotipy
 import spotipy.util as util
 import logging
 import argparse
-from any2spotify import *
 
-def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=None,playlist_id=None,addonly=False):
+def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=None,playlist_id=None,addonly=False,limit=0):
   """ Sync a SRF3 podcast feed with a spotify playlist
 
       Parameters:
@@ -54,38 +53,34 @@ def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=No
     # bail out if the list is empty before removing everything
     sys.exit(1)
 
-  # use the playlist_id if there is one, else use the playlist named like playlist_name or create one like the podcast title
-  if not playlist_id:
+  if playlist_id:
+    targetplaylist = playlist_id
+  else:
     if not playlist_name:
       # use the podcast title if nothing specified
       data = get_podcast_data(feed)
       playlist_name = data['rss']['channel']['title']
 
-    # since one can't query for a specific playlist by name we have to get them all and search ourselves
-    playlists = spotify.user_playlists(spotifyusername)
-    logging.info("Got %d existing playlists for user %s" % (len(playlists),spotifyusername))
-    logging.debug(playlists)
+    targetplaylist = get_or_create_playlistid_by_name(playlist_name,spotifyusername,spotify)
 
-    targetplaylist = ""
-    for playlist in playlists['items']:
-      if playlist['name'] == playlist_name:
-        targetplaylist = playlist['uri']
-        logging.info("found existing playlist %s %s" % (playlist_name,targetplaylist))
-        break
-    if targetplaylist == "":
-      # the playlist does not exist yet
-      playlist = spotify.user_playlist_create(spotifyusername,playlist_name)
-      targetplaylist = playlist['uri']
-      logging.info("created new playlist %s %s" % (targetplaylist,playlist_name))
-  else:
-    logging.debug("setting playlist id to %s" % playlist_id)
-    targetplaylist = playlist_id
+    sync_tracks(songs,targetplaylist,spotifyusername,spotify,addonly,limit)
 
+def sync_tracks(songs,targetplaylist,spotifyusername,spotify=spotipy.Spotify,addonly=False,limit=0):
+  """ sync a list of spotify song IDs with a spotify playlist
+
+      Parameters:
+        - songs - the list of spotify song IDs
+        - targetplaylist - the ID of the playlist to sync to
+        - spotifyusername - spotify account to look for the playlist¬
+        - spotify - authenticated spotipy object¬
+        - addonly - only add songs to the spotify playlist, don't remove superfluous tracks
+        - limit - limit the total length of the spotify playlist, useful with addonly, removes the oldest tracks
+  """
   # there is a spotify.user_playlist_replace_tracks() but it accepts only 100 tracks at a time
   # the rest has to be spotify.user_playlist_add_tracks() manually
   # so we're adding/deleting them ourselves
 
-  # get all old tracks from the playlist to later delete the superfluous ones
+  # iterate though the playlist and (optionally) delete no longer existing tracks
   playlisttracks = []
   logging.debug("spotify_get_all_trackids %s %s %s" % (spotifyusername,targetplaylist,spotify))
   for track in spotify_get_all_trackids(spotifyusername,targetplaylist,spotify):
@@ -93,7 +88,7 @@ def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=No
       if addonly:
         logging.info("not removing %s since --add is specified" % track)
       else:
-        logging.info("removing %s from playlist" % track)
+        logging.info("removing %s from playlist because not in feed" % track)
         spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,[track])
     else:
       playlisttracks.append(track)
@@ -103,6 +98,37 @@ def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=No
     if song not in playlisttracks:
       logging.info("adding %s to playlist" % song)
       spotify.user_playlist_add_tracks(spotifyusername,targetplaylist,[song])
+
+  if limit>0:
+    # aggregate the existing playlisttracks and the newly added songs to have the new total number
+    playlisttracks.extend(songs)
+    # only leave the last $limit songs, remove len(playlisttracks)-limit tracks from the start
+    for track in playlisttracks[:-limit]:
+      logging.info("removing %s from playlist because over limit" % track)
+      spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,[track])
+
+def get_or_create_playlistid_by_name(playlist_name,spotifyusername,spotify):
+  """ get a playlist ID from the playlist name of a user, create the playlist if there is none
+
+      Parameters:
+        - playlist_name - the name of the playlist to get or create
+        - spotifyusername - spotify account to look for the playlist¬
+        - spotify - authenticated spotipy object¬
+  """
+
+  # since one can't query for a specific playlist by name we have to get them all and search ourselves
+  playlists = spotify.user_playlists(spotifyusername)
+  logging.info("Got %d existing playlists for user %s" % (len(playlists),spotifyusername))
+  logging.debug(playlists)
+
+  for playlist in playlists['items']:
+    if playlist['name'] == playlist_name:
+      logging.info("found existing playlist %s %s" % (playlist['uri'],playlist_name))
+      return playlist['uri']
+  # the playlist does not exist yet
+  playlist = spotify.user_playlist_create(spotifyusername,playlist_name)
+  logging.info("created new playlist %s %s" % (playlist['uri'],playlist_name))
+  return playlist['uri']
 
 def spotify_get_all_trackids(spotifyusername,targetplaylist,spotify):
   """ Get all tracks for a playlist - the API only provides 100 tracks at the time
@@ -139,6 +165,17 @@ def spotify_search_songs(songs,spotify=spotipy.Spotify()):
     else:
       logging.info("no spotify track found for %s" % song)
   return results
+
+def get_jouluradio_songlog(url="http://www.jouluradio.fi/biisilista/jouluradiolast20.json"):
+  """ Get the song log for jouluradio.fi. Returns an array of dict with 'artist' and 'title' keys"""
+  filehandle = urllib2.urlopen(url)
+  data = filehandle.read()
+  filehandle.close()
+  data = json.loads(data)
+  songs = []
+  for song in data['last20']:
+    songs.append({'title': song['song'], 'artist': song['artist']})
+  return songs
 
 def get_srf3_songlog(start,end,datapollingurl="http://ws.srf.ch/songlog/log/channel/",datachannelid="dd0fa1ba-4ff6-4e1a-ab74-d7e49057d96f"):
   """ Get the song log for SRF3 radio by start/end datetime. Returns an array of dict with 'artist' and 'title' keys"""
