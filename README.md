@@ -47,4 +47,4 @@ see above for details, see cron-hourly.sh for examples
 
 * Jouluradio.fi 2015 (finnish): https://open.spotify.com/user/aarnoaukia/playlist/3W2gEbnEqytlM221BSusCb
 * Jouluradio.fi Xmas 2015 (english): https://open.spotify.com/user/aarnoaukia/playlist/4KXmZgDJG5J4MMDIM5wSAt
-* Jouluradio.fu Rouhea Joulu 2015 (more "rocky"): https://open.spotify.com/user/aarnoaukia/playlist/3HY2gCw7bfyxK4TtbeHb4s
+* Jouluradio.fu Rouhea Joulu 2015 ("corny/juicy"): https://open.spotify.com/user/aarnoaukia/playlist/3HY2gCw7bfyxK4TtbeHb4s
