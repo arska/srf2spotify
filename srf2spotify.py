@@ -26,6 +26,7 @@ def main(argv=None):
   parser.add_argument('--name',required=False,default=None,help='spotify playlist name to sync to. the playlist is created if there is no such playlist for the user. the podcast title is used if omitted.')
   parser.add_argument('-v','--verbose',help='output debug logging',action='store_true',default=False)
   parser.add_argument('-a','--add',help='only add songs to the playlist, dont remove them if missing from the feed',action='store_true',default=False)
+  parser.add_argument('-l','--limit',help='limit the total number of tracks in the playist (useful with --add, default=0=no limit)',default=0)
   args = parser.parse_args()
 
   if args.verbose:
@@ -38,7 +39,7 @@ def main(argv=None):
   spotify = spotipy.Spotify(auth=token)
   logging.debug("logged in to spotify")
 
-  sync_podcastfeed_with_playlist(feed=args.feed,spotify=spotify,spotifyusername=args.username,playlist_name=args.name,playlist_id=args.id,addonly=args.add)
+  sync_podcastfeed_with_playlist(feed=args.feed,spotify=spotify,spotifyusername=args.username,playlist_name=args.name,playlist_id=args.id,addonly=args.add,limit=args.limit)
 
 if __name__ == "__main__":
   """Boilerplate main function call"""
