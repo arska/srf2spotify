@@ -175,9 +175,19 @@ def get_radiorock_songlog(url="http://www.radiorock.fi/api/programdata/getlatest
   songs = []
   for song in data['result']:
     date = datetime.datetime.fromtimestamp(song['timestamp']/1000)
-    logging.info("%s %s  %s %s" % (date,song['timestamp'],song['song'],song['artist']))
-    songs.append({'title': song['song'], 'artist': song['artist']})
+    #logging.debug("%s %s  %s %s" % (date,song['timestamp'],song['song'],song['artist']))
+    songs.append({'title': song['song'], 'artist': song['artist'], 'timestamp': song['timestamp']})
   return songs
+
+def get_playlist_for_timestamp(timestamp,map):
+  """ select the playlist for a msec-timestamp from a map of weekday/time """
+  playtime = datetime.datetime.fromtimestamp(timestamp/1000)
+  for entry in map:
+    if (entry['weekday'] == "*" or entry['weekday'] == playtime.weekday()) and entry['from'] <= playtime.time() and playtime.time() < entry['to']:
+      logging.debug("timestamp %s (%s) selected %s" % (playtime,timestamp,entry))
+      return entry['playlist']
+  logging.info("couldnt find playlist for %s (%s), selecting last from map" % (playtime,timestamp))
+  return map[-1]['playlist']
 
 def get_jouluradio_songlog(url="http://www.jouluradio.fi/biisilista/jouluradiolast20.json"):
   """ Get the song log for jouluradio.fi. Returns an array of dict with 'artist' and 'title' keys"""

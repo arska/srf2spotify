@@ -1,6 +1,6 @@
 # Spotify playlist sync/update
 
-This project started with SRF2spotify, later jouluradio2spotify was added
+This project started with SRF2spotify, later jouluradio2spotify and radiorock2spotify was added
 
 ## SRF2Spotify
 
@@ -52,3 +52,11 @@ see above for details, see cron-hourly.sh for examples
 * Pikku Jouluradio.fi 2015 (for children): https://open.spotify.com/user/aarnoaukia/playlist/5JXXR8XDKMWrZvdsbmbnLO
 * Jouluradio.fi Klassinen 2015 (classical): https://open.spotify.com/user/aarnoaukia/playlist/11GKkK9iKKWP4Y0zV9teo7
 
+## Radiorock2spotify
+a fried asked to do playlists for a radiorock.fi show as well
+### result
+* Ke klo 19-21 Keskiviikon perinteiset (Klasu): https://open.spotify.com/user/aarnoaukia/playlist/6jkZf1uscq2AwGWKf7To0w
+* To klo 19-21 Torstain terävämmät (Klasu): https://open.spotify.com/user/aarnoaukia/playlist/4OdqoyHT3mVndTwwrEhMjp
+* Pe klo 19-21 Rock n roll Circus Jussi 69: https://open.spotify.com/user/aarnoaukia/playlist/5JmDRoineh4NuGjYD5zOvb
+* La 18-19 50 Kaikkien aikojen kovinta rocktähteä: https://open.spotify.com/user/aarnoaukia/playlist/3PObJM8VTktdZE4kBH79xo
+* kaikki korporaatiot & muut: https://open.spotify.com/user/aarnoaukia/playlist/5BEhl8eSv2l1DRECv8DXAH

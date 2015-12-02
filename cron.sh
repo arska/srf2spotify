@@ -27,3 +27,6 @@ python srf2spotify.py -av --id 0mdijROnuU2CRY7MKcDv35 $SPOTIFY_USERNAME http://p
 
 python srf2spotify.py -av --id 3K9MLAIkBey8i1GSCQ95NF $SPOTIFY_USERNAME http://podcasts.srf.ch/world_music_special_mpx.xml
 # https://open.spotify.com/user/aarnoaukia/playlist/3K9MLAIkBey8i1GSCQ95NF
+
+python radiorock2spotify.py -a $SPOTIFY_USERNAME http://www.radiorock.fi/api/programdata/getlatest
+# see code or README.md for links
