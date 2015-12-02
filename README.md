@@ -48,3 +48,7 @@ see above for details, see cron-hourly.sh for examples
 * Jouluradio.fi 2015 (finnish): https://open.spotify.com/user/aarnoaukia/playlist/3W2gEbnEqytlM221BSusCb
 * Jouluradio.fi Xmas 2015 (english): https://open.spotify.com/user/aarnoaukia/playlist/4KXmZgDJG5J4MMDIM5wSAt
 * Jouluradio.fu Rouhea Joulu 2015 ("corny/juicy"): https://open.spotify.com/user/aarnoaukia/playlist/3HY2gCw7bfyxK4TtbeHb4s
+* Jouluradio.fi Kauneimmat 2015 ("the most beautiful"): https://open.spotify.com/user/aarnoaukia/playlist/75oYEbhELvE36eIsT4sDzJ
+* Pikku Jouluradio.fi 2015 (for children): https://open.spotify.com/user/aarnoaukia/playlist/5JXXR8XDKMWrZvdsbmbnLO
+* Jouluradio.fi Klassinen 2015 (classical): https://open.spotify.com/user/aarnoaukia/playlist/11GKkK9iKKWP4Y0zV9teo7
+
