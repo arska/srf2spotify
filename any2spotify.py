@@ -17,11 +17,9 @@ import spotipy.util as util
 import logging
 import argparse
 import HTMLParser
-#import cachetools
 import shelve
 import re
 
-#cache = cachetools.LRUCache(10000)
 cache = shelve.open(".cachespotifysearch")
 
 def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=None,playlist_id=None,addonly=False,limit=0):
@@ -164,7 +162,7 @@ def spotify_search_songs(songs,spotify=spotipy.Spotify()):
   """
   results = []
   for song in songs:
-    track = multisearch(song['artist'],song['title'],spotify)
+    track = multisearch_track(song['artist'],song['title'],spotify)
     if track is not None:
       if track not in results:
         results.append(track)
@@ -172,12 +170,15 @@ def spotify_search_songs(songs,spotify=spotipy.Spotify()):
       logging.warning("no spotify track found for %s" % (song))
   return results
 
-def multisearch(artist,title,spotify):
+def multisearch_track(artist,title,spotify,recursion=True):
+  """ search for artist/track using multiple variants of normalization """
+  # naive search
   result = cached_search('artist:"'+encode_name(artist)+'" track:"'+encode_name(title)+'"',type='track',spotify=spotify)
   if len(result['tracks']['items']) > 0:
     return result['tracks']['items'][0]['uri']
 
-  result = cached_search('artist:"'+encode_name(artist)+'" track:"'+normalize_name(title)+'"',type='track',spotify=spotify)
+  # wiggle the title
+  result = cached_search('artist:"'+encode_name(artist)+'" track:"'+normalize_name(title,alternative=False)+'"',type='track',spotify=spotify)
   if len(result['tracks']['items']) > 0:
     return result['tracks']['items'][0]['uri']
 
@@ -185,7 +186,8 @@ def multisearch(artist,title,spotify):
   if len(result['tracks']['items']) > 0:
     return result['tracks']['items'][0]['uri']
 
-  result = cached_search('artist:"'+normalize_artist(artist,spotify)+'" track:"'+normalize_name(title)+'"',type='track',spotify=spotify)
+  # wiggle artist & title
+  result = cached_search('artist:"'+normalize_artist(artist,spotify)+'" track:"'+normalize_name(title,alternative=False)+'"',type='track',spotify=spotify)
   if len(result['tracks']['items']) > 0:
     return result['tracks']['items'][0]['uri']
 
@@ -193,9 +195,43 @@ def multisearch(artist,title,spotify):
   if len(result['tracks']['items']) > 0:
     return result['tracks']['items'][0]['uri']
 
+  # remove label-search and do fulltext search
   result = cached_search(encode_name(artist)+' '+encode_name(title),type='track',spotify=spotify)
   if len(result['tracks']['items']) > 0:
     return result['tracks']['items'][0]['uri']
+
+  # wiggle title
+  result = cached_search(encode_name(artist)+' '+normalize_name(title,alternative=False),type='track',spotify=spotify)
+  if len(result['tracks']['items']) > 0:
+    return result['tracks']['items'][0]['uri']
+
+  result = cached_search(encode_name(artist)+' '+normalize_name(title,alternative=True),type='track',spotify=spotify)
+  if len(result['tracks']['items']) > 0:
+    return result['tracks']['items'][0]['uri']
+
+  # wiggle artist & title
+  result = cached_search(normalize_artist(artist,spotify)+' '+encode_name(title),type='track',spotify=spotify)
+  if len(result['tracks']['items']) > 0:
+    return result['tracks']['items'][0]['uri']
+
+  result = cached_search(normalize_artist(artist,spotify)+' '+normalize_name(title,alternative=False),type='track',spotify=spotify)
+  if len(result['tracks']['items']) > 0:
+    return result['tracks']['items'][0]['uri']
+
+  result = cached_search(normalize_artist(artist,spotify)+' '+normalize_name(title,alternative=True),type='track',spotify=spotify)
+  if len(result['tracks']['items']) > 0:
+    return result['tracks']['items'][0]['uri']
+
+  if recursion == True:
+    # try the normalization steps above again with severely mangled titles
+    # this should catch "(radio edit)" etc
+    track = multisearch_track(artist,re.sub(' \(.*\)$','',title,flags=re.IGNORECASE),spotify,False)
+    if track is not None:
+      return track
+    # this should catch title:"asdf feat. Sandy Blabla"
+    track = multisearch_track(artist,re.sub(' feat\..*$','',title,flags=re.IGNORECASE),spotify,False)
+    if track is not None:
+      return track
 
   return None
 
@@ -209,31 +245,56 @@ def normalize_artist(artist,spotify):
     return "Steve n Seagulls"
   elif artist == "Sugar":
     return "Sugar"
-  elif artist == 'Serj Tankian & Tom Morello':
-    return 'Serj Tankian'
+  #elif artist == 'Serj Tankian & Tom Morello':
+  #  return 'Serj Tankian' # this one should now be catched by a regex below
   elif artist == 'Jackets':
     return 'The Jackets'
 
   key = "norm-artist!"+encode_name(artist)
   if key not in cache:
-    result = cached_search(normalize_name(artist,alternative=False),type='artist',spotify=spotify)
-    if len(result['artists']['items']) > 0:
-      cache[key] = encode_name(result['artists']['items'][0]['name'])
-    else:
-      result = cached_search(normalize_name(artist,alternative=True),type='artist',spotify=spotify)
-      if len(result['artists']['items']) > 0:
-        cache[key] = encode_name(result['artists']['items'][0]['name'])
-      else:
-        # couldn't find artist name in spotify - we probably won't find the track either but let's at least try
-        cache[key] = encode_name(artist)
+    cache[key] = encode_name(multisearch_artist(artist,spotify))
   return cache[key]
+
+def multisearch_artist(artist,spotify,recursion=True):
+  """ search for artist using multiple normalizations """
+
+  result = cached_search(encode_name(artist),type='artist',spotify=spotify)
+  if len(result['artists']['items']) > 0:
+    return result['artists']['items'][0]['name']
+
+  result = cached_search(normalize_name(artist,alternative=False),type='artist',spotify=spotify)
+  if len(result['artists']['items']) > 0:
+    return result['artists']['items'][0]['name']
+
+  result = cached_search(normalize_name(artist,alternative=True),type='artist',spotify=spotify)
+  if len(result['artists']['items']) > 0:
+    return result['artists']['items'][0]['name']
+
+  if recursion == False:
+    # if recursion==False then we are being called from inside this function, below, and return None if we didn't have a match
+    return None
+
+  result = multisearch_artist(re.sub(' \& .*$','',artist,flags=re.IGNORECASE),spotify,False)
+  if result is not None:
+    return result
+  result = multisearch_artist(re.sub(' \(.*\)$','',artist,flags=re.IGNORECASE),spotify,False)
+  if result is not None:
+    return result
+  result = multisearch_artist(re.sub(' feat\..*$','',artist,flags=re.IGNORECASE),spotify,False)
+  if result is not None:
+    return result
+
+  # if we reach this point we give up looking for the artist since he probably isn't on spotify at all and neither is the song
+  return artist
 
 def cached_search(query,type,spotify):
   """ wrapper around spotipy.Spotify.search() that caches searches """
   key = type + "!" + query
   if key not in cache:
-    logging.debug("search cache miss: %s"%query)
+    logging.debug("search cache miss: %s: %s"%(type,query))
     cache[key] = spotify.search(query,type=type,limit=1)
+  else:
+    logging.debug("search cache hit: %s: %s"%(type,query))
   return cache[key]
 
 def encode_name(text):
@@ -251,10 +312,8 @@ def normalize_name(text,alternative=False):
   elif text == 'The Number Of The Beast/can I Play With Madness':
     return 'The Number Of The Beast'
 
-  text = re.sub(' \(Radio Edit\)$','',text,flags=re.IGNORECASE)
-  text = re.sub(' feat\..*$','',text,flags=re.IGNORECASE)
-
   text = encode_name(text)
+
   for str in ['`','\xc2\xb4']:
     text = text.replace(str,(' ' if alternative else ''))
   return text
