@@ -17,9 +17,12 @@ import spotipy.util as util
 import logging
 import argparse
 import HTMLParser
-import cachetools
+#import cachetools
+import shelve
+import re
 
-cache = cachetools.LRUCache(10000)
+#cache = cachetools.LRUCache(10000)
+cache = shelve.open(".cachespotifysearch")
 
 def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=None,playlist_id=None,addonly=False,limit=0):
   """ Sync a SRF3 podcast feed with a spotify playlist
@@ -86,7 +89,7 @@ def sync_tracks(songs,targetplaylist,spotifyusername,spotify=spotipy.Spotify,add
 
   # iterate though the playlist and (optionally) delete no longer existing tracks
   playlisttracks = []
-  logging.debug("spotify_get_all_trackids %s %s %s" % (spotifyusername,targetplaylist,spotify))
+  #logging.debug("spotify_get_all_trackids %s %s %s" % (spotifyusername,targetplaylist,spotify))
   for track in spotify_get_all_trackids(spotifyusername,targetplaylist,spotify):
     if track not in songs:
       if addonly:
@@ -161,49 +164,100 @@ def spotify_search_songs(songs,spotify=spotipy.Spotify()):
   """
   results = []
   for song in songs:
-    result = cached_search(normalize_artist(song['artist'],spotify)+' '+normalize_name(song['title']),type='track',spotify=spotify)
-    if len(result['tracks']['items']) > 0:
-      track = result['tracks']['items'][0]['uri']
+    track = multisearch(song['artist'],song['title'],spotify)
+    if track is not None:
       if track not in results:
         results.append(track)
     else:
-      result = cached_search(normalize_artist(song['artist'],spotify)+' '+normalize_name(song['title'],alternative=True),type='track',spotify=spotify)
-      if len(result['tracks']['items']) > 0:
-        track = result['tracks']['items'][0]['uri']
-        if track not in results:
-          results.append(track)
-      else:
-        logging.warning("no spotify track found for %s: %s" % (song,result))
+      logging.warning("no spotify track found for %s" % (song))
   return results
+
+def multisearch(artist,title,spotify):
+  result = cached_search('artist:"'+encode_name(artist)+'" track:"'+encode_name(title)+'"',type='track',spotify=spotify)
+  if len(result['tracks']['items']) > 0:
+    return result['tracks']['items'][0]['uri']
+
+  result = cached_search('artist:"'+encode_name(artist)+'" track:"'+normalize_name(title)+'"',type='track',spotify=spotify)
+  if len(result['tracks']['items']) > 0:
+    return result['tracks']['items'][0]['uri']
+
+  result = cached_search('artist:"'+encode_name(artist)+'" track:"'+normalize_name(title,alternative=True)+'"',type='track',spotify=spotify)
+  if len(result['tracks']['items']) > 0:
+    return result['tracks']['items'][0]['uri']
+
+  result = cached_search('artist:"'+normalize_artist(artist,spotify)+'" track:"'+normalize_name(title)+'"',type='track',spotify=spotify)
+  if len(result['tracks']['items']) > 0:
+    return result['tracks']['items'][0]['uri']
+
+  result = cached_search('artist:"'+normalize_artist(artist,spotify)+'" track:"'+normalize_name(title,alternative=True)+'"',type='track',spotify=spotify)
+  if len(result['tracks']['items']) > 0:
+    return result['tracks']['items'][0]['uri']
+
+  result = cached_search(encode_name(artist)+' '+encode_name(title),type='track',spotify=spotify)
+  if len(result['tracks']['items']) > 0:
+    return result['tracks']['items'][0]['uri']
+
+  return None
 
 def normalize_artist(artist,spotify):
   """ normalize the artist name by searching for it and using the search result name as returned by spotify """
-  if artist not in cache:
+
+  # oh well, starting to work around spotify search result quality... :/
+  if artist == "Cult":
+    return "The Cult"
+  elif artist == "Steven &apos;n&apos; Seagulls":
+    return "Steve n Seagulls"
+  elif artist == "Sugar":
+    return "Sugar"
+  elif artist == 'Serj Tankian & Tom Morello':
+    return 'Serj Tankian'
+  elif artist == 'Jackets':
+    return 'The Jackets'
+
+  key = "norm-artist!"+encode_name(artist)
+  if key not in cache:
     result = cached_search(normalize_name(artist,alternative=False),type='artist',spotify=spotify)
     if len(result['artists']['items']) > 0:
-      cache[artist] = encode_name(result['artists']['items'][0]['name'])
+      cache[key] = encode_name(result['artists']['items'][0]['name'])
     else:
       result = cached_search(normalize_name(artist,alternative=True),type='artist',spotify=spotify)
       if len(result['artists']['items']) > 0:
-        cache[artist] = encode_name(result['artists']['items'][0]['name'])
+        cache[key] = encode_name(result['artists']['items'][0]['name'])
       else:
         # couldn't find artist name in spotify - we probably won't find the track either but let's at least try
-        cache[artist] = encode_name(artist)
-  return cache[artist]
+        cache[key] = encode_name(artist)
+  return cache[key]
 
 def cached_search(query,type,spotify):
-  key = cachetools.hashkey(query,type)
+  """ wrapper around spotipy.Spotify.search() that caches searches """
+  key = type + "!" + query
   if key not in cache:
     logging.debug("search cache miss: %s"%query)
     cache[key] = spotify.search(query,type=type,limit=1)
   return cache[key]
 
 def encode_name(text):
+  """ replace html entities (&amp;) and utf8-encode for strings from web-apis """
   html = HTMLParser.HTMLParser()
   return html.unescape(text).encode('utf8')
 
 def normalize_name(text,alternative=False):
-  return encode_name(text).replace('`',(' ' if alternative else '')).replace('\xc2\xb4',(' ' if alternative else '')).replace(' (Radio Edit)','').replace(' (Radio edit)','').replace("'n'",'')
+  """ normalize song and artist names by replacing apostrophes and other special characters by either '' or ' ' """
+  # oh well, starting to work around spotify search result quality... :/
+  if text == "Song2":
+    return "Song 2"
+  elif text == "Kuolemankurviin":
+    return "Kuoleman Kurviin"
+  elif text == 'The Number Of The Beast/can I Play With Madness':
+    return 'The Number Of The Beast'
+
+  text = re.sub(' \(Radio Edit\)$','',text,flags=re.IGNORECASE)
+  text = re.sub(' feat\..*$','',text,flags=re.IGNORECASE)
+
+  text = encode_name(text)
+  for str in ['`','\xc2\xb4']:
+    text = text.replace(str,(' ' if alternative else ''))
+  return text
 
 def get_radiorock_songlog(url="http://www.radiorock.fi/api/programdata/getlatest"):
   """ Get the song log for radiorock.fi. Returns an array of dict with 'artist' and 'title' keys"""
