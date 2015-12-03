@@ -37,25 +37,25 @@ def main(argv=None):
   # so here is the map how to split them up
   playlistmap = [
     {
-      'weekday': '2', #ke
+      'weekday': 2, #ke
       'from': datetime.time(19),
       'to': datetime.time(21),
       'playlist': 'spotify:user:aarnoaukia:playlist:6jkZf1uscq2AwGWKf7To0w',
     },
     {
-      'weekday': '3', #to
+      'weekday': 3, #to
       'from': datetime.time(19),
       'to': datetime.time(21),
       'playlist': 'spotify:user:aarnoaukia:playlist:4OdqoyHT3mVndTwwrEhMjp',
     },
     {
-      'weekday': '4', #pe
+      'weekday': 4, #pe
       'from': datetime.time(19),
       'to': datetime.time(21),
       'playlist': 'spotify:user:aarnoaukia:playlist:5JmDRoineh4NuGjYD5zOvb',
     },
     {
-      'weekday': '5', #la
+      'weekday': 5, #la
       'from': datetime.time(18),
       'to': datetime.time(19),
       'playlist': 'spotify:user:aarnoaukia:playlist:3PObJM8VTktdZE4kBH79xo',

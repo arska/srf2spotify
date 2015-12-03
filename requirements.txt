@@ -1,4 +1,5 @@
 dateutils==0.6.6
+HTMLParser==0.0.2
 python-dateutil==2.4.2
 pytz==2015.7
 requests==2.8.1

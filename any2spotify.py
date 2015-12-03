@@ -16,6 +16,7 @@ import spotipy
 import spotipy.util as util
 import logging
 import argparse
+import HTMLParser
 
 def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=None,playlist_id=None,addonly=False,limit=0):
   """ Sync a SRF3 podcast feed with a spotify playlist
@@ -148,7 +149,7 @@ def spotify_get_all_trackids(spotifyusername,targetplaylist,spotify):
       result.append(item['track']['uri'])
   return result
 
-def spotify_search_songs(songs,spotify=spotipy.Spotify()):
+def spotify_search_songs(songs,spotify=spotipy.Spotify(),alternative=False):
   """ search spotify for artist/title and return the unique spotify track IDs
 
       Parameters:
@@ -157,14 +158,23 @@ def spotify_search_songs(songs,spotify=spotipy.Spotify()):
   """
   results = []
   for song in songs:
-    result = spotify.search("artist:"+song['artist']+" track:"+song['title'],limit=1,type='track')
+    #result = spotify.search('artist:'+normalize_name(song['artist'])+' track:'+normalize_name(song['title'])+'',limit=1,type='track')
+    result = spotify.search(''+normalize_name(song['artist'],alternative)+' '+normalize_name(song['title'],alternative)+'',limit=1,type='track')
     if len(result['tracks']['items']) > 0:
       track = result['tracks']['items'][0]['uri']
       if track not in results:
         results.append(track)
+    elif alternative == False:
+      track = spotify_search_songs([song],spotify,True) # try alternative normalization
+      if len(track) > 0 and track not in results:
+        results.extend(track)
     else:
-      logging.info("no spotify track found for %s" % song)
+      logging.warning("no spotify track found for %s: %s" % (song,result))
   return results
+
+def normalize_name(text,alternative=False):
+  html = HTMLParser.HTMLParser()
+  return html.unescape(text).encode('utf8').replace('`',(' ' if alternative else '')).replace('\xc2\xb4',(' ' if alternative else '')).replace(' (Radio Edit)','').replace(' (Radio edit)','').replace("'n'",'')
 
 def get_radiorock_songlog(url="http://www.radiorock.fi/api/programdata/getlatest"):
   """ Get the song log for radiorock.fi. Returns an array of dict with 'artist' and 'title' keys"""
@@ -176,14 +186,15 @@ def get_radiorock_songlog(url="http://www.radiorock.fi/api/programdata/getlatest
   for song in data['result']:
     date = datetime.datetime.fromtimestamp(song['timestamp']/1000)
     #logging.debug("%s %s  %s %s" % (date,song['timestamp'],song['song'],song['artist']))
-    songs.append({'title': song['song'], 'artist': song['artist'], 'timestamp': song['timestamp']})
+    songs.append({'title': (song['song']), 'artist': (song['artist']), 'timestamp': song['timestamp']})
   return songs
 
 def get_playlist_for_timestamp(timestamp,map):
   """ select the playlist for a msec-timestamp from a map of weekday/time """
   playtime = datetime.datetime.fromtimestamp(timestamp/1000)
   for entry in map:
-    if (entry['weekday'] == "*" or entry['weekday'] == playtime.weekday()) and entry['from'] <= playtime.time() and playtime.time() < entry['to']:
+    #logging.debug("timestamp %s (%s) weekday %s time %s checking %s"%(playtime,timestamp,playtime.weekday(),playtime.time(),entry))
+    if (entry['weekday'] == "*" or int(entry['weekday']) == int(playtime.weekday())) and entry['from'] <= playtime.time() and playtime.time() < entry['to']:
       logging.debug("timestamp %s (%s) selected %s" % (playtime,timestamp,entry))
       return entry['playlist']
   logging.info("couldnt find playlist for %s (%s), selecting last from map" % (playtime,timestamp))
@@ -197,7 +208,7 @@ def get_jouluradio_songlog(url="http://www.jouluradio.fi/biisilista/jouluradiola
   data = json.loads(data)
   songs = []
   for song in data['last20']:
-    songs.append({'title': song['song'], 'artist': song['artist']})
+    songs.append({'title': (song['song']), 'artist': (song['artist'])})
   return songs
 
 def get_srf3_songlog(start,end,datapollingurl="http://ws.srf.ch/songlog/log/channel/",datachannelid="dd0fa1ba-4ff6-4e1a-ab74-d7e49057d96f"):
@@ -215,7 +226,7 @@ def get_srf3_songlog(start,end,datapollingurl="http://ws.srf.ch/songlog/log/chan
   data = json.loads(data)
   songs = []
   for song in data['Songlog']:
-    songs.append({'title': song['Song']['title'], 'artist': song['Song']['Artist']['name']})
+    songs.append({'title': (song['Song']['title']), 'artist': (song['Song']['Artist']['name'])})
   return songs
 
 def get_datetime_from_podcast(feed):
