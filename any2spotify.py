@@ -19,7 +19,7 @@ import argparse
 import HTMLParser
 import cachetools
 
-cache = cachetools.LRUCache(1000)
+cache = cachetools.LRUCache(10000)
 
 def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=None,playlist_id=None,addonly=False,limit=0):
   """ Sync a SRF3 podcast feed with a spotify playlist
@@ -152,7 +152,7 @@ def spotify_get_all_trackids(spotifyusername,targetplaylist,spotify):
       result.append(item['track']['uri'])
   return result
 
-def spotify_search_songs(songs,spotify=spotipy.Spotify(),alternative=False):
+def spotify_search_songs(songs,spotify=spotipy.Spotify()):
   """ search spotify for artist/title and return the unique spotify track IDs
 
       Parameters:
@@ -161,20 +161,35 @@ def spotify_search_songs(songs,spotify=spotipy.Spotify(),alternative=False):
   """
   results = []
   for song in songs:
-    #result = spotify.search('artist:'+normalize_name(song['artist'])+' track:'+normalize_name(song['title'])+'',limit=1,type='track')
-    #result = spotify.search(''+normalize_name(song['artist'],alternative)+' '+normalize_name(song['title'],alternative)+'',limit=1,type='track')
-    result = cached_search(''+normalize_name(song['artist'],alternative)+' '+normalize_name(song['title'],alternative)+'',type='track',spotify=spotify)
+    result = cached_search(normalize_artist(song['artist'],spotify)+' '+normalize_name(song['title']),type='track',spotify=spotify)
     if len(result['tracks']['items']) > 0:
       track = result['tracks']['items'][0]['uri']
       if track not in results:
         results.append(track)
-    elif alternative == False:
-      track = spotify_search_songs([song],spotify,True) # try alternative normalization
-      if len(track) > 0 and track not in results:
-        results.extend(track)
     else:
-      logging.warning("no spotify track found for %s: %s" % (song,result))
+      result = cached_search(normalize_artist(song['artist'],spotify)+' '+normalize_name(song['title'],alternative=True),type='track',spotify=spotify)
+      if len(result['tracks']['items']) > 0:
+        track = result['tracks']['items'][0]['uri']
+        if track not in results:
+          results.append(track)
+      else:
+        logging.warning("no spotify track found for %s: %s" % (song,result))
   return results
+
+def normalize_artist(artist,spotify):
+  """ normalize the artist name by searching for it and using the search result name as returned by spotify """
+  if artist not in cache:
+    result = cached_search(normalize_name(artist,alternative=False),type='artist',spotify=spotify)
+    if len(result['artists']['items']) > 0:
+      cache[artist] = encode_name(result['artists']['items'][0]['name'])
+    else:
+      result = cached_search(normalize_name(artist,alternative=True),type='artist',spotify=spotify)
+      if len(result['artists']['items']) > 0:
+        cache[artist] = encode_name(result['artists']['items'][0]['name'])
+      else:
+        # couldn't find artist name in spotify - we probably won't find the track either but let's at least try
+        cache[artist] = encode_name(artist)
+  return cache[artist]
 
 def cached_search(query,type,spotify):
   key = cachetools.hashkey(query,type)
@@ -183,9 +198,12 @@ def cached_search(query,type,spotify):
     cache[key] = spotify.search(query,type=type,limit=1)
   return cache[key]
 
-def normalize_name(text,alternative=False):
+def encode_name(text):
   html = HTMLParser.HTMLParser()
-  return html.unescape(text).encode('utf8').replace('`',(' ' if alternative else '')).replace('\xc2\xb4',(' ' if alternative else '')).replace(' (Radio Edit)','').replace(' (Radio edit)','').replace("'n'",'')
+  return html.unescape(text).encode('utf8')
+
+def normalize_name(text,alternative=False):
+  return encode_name(text).replace('`',(' ' if alternative else '')).replace('\xc2\xb4',(' ' if alternative else '')).replace(' (Radio Edit)','').replace(' (Radio edit)','').replace("'n'",'')
 
 def get_radiorock_songlog(url="http://www.radiorock.fi/api/programdata/getlatest"):
   """ Get the song log for radiorock.fi. Returns an array of dict with 'artist' and 'title' keys"""
