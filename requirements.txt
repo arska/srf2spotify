@@ -1,3 +1,4 @@
+cachetools==1.1.5
 dateutils==0.6.6
 HTMLParser==0.0.2
 python-dateutil==2.4.2

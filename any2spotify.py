@@ -17,6 +17,9 @@ import spotipy.util as util
 import logging
 import argparse
 import HTMLParser
+import cachetools
+
+cache = cachetools.LRUCache(1000)
 
 def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=None,playlist_id=None,addonly=False,limit=0):
   """ Sync a SRF3 podcast feed with a spotify playlist
@@ -159,7 +162,8 @@ def spotify_search_songs(songs,spotify=spotipy.Spotify(),alternative=False):
   results = []
   for song in songs:
     #result = spotify.search('artist:'+normalize_name(song['artist'])+' track:'+normalize_name(song['title'])+'',limit=1,type='track')
-    result = spotify.search(''+normalize_name(song['artist'],alternative)+' '+normalize_name(song['title'],alternative)+'',limit=1,type='track')
+    #result = spotify.search(''+normalize_name(song['artist'],alternative)+' '+normalize_name(song['title'],alternative)+'',limit=1,type='track')
+    result = cached_search(''+normalize_name(song['artist'],alternative)+' '+normalize_name(song['title'],alternative)+'',type='track',spotify=spotify)
     if len(result['tracks']['items']) > 0:
       track = result['tracks']['items'][0]['uri']
       if track not in results:
@@ -171,6 +175,13 @@ def spotify_search_songs(songs,spotify=spotipy.Spotify(),alternative=False):
     else:
       logging.warning("no spotify track found for %s: %s" % (song,result))
   return results
+
+def cached_search(query,type,spotify):
+  key = cachetools.hashkey(query,type)
+  if key not in cache:
+    logging.debug("search cache miss: %s"%query)
+    cache[key] = spotify.search(query,type=type,limit=1)
+  return cache[key]
 
 def normalize_name(text,alternative=False):
   html = HTMLParser.HTMLParser()
