@@ -1,0 +1,4 @@
+[submodule "spotipy"]
+	path = spotipy
+	url = https://github.com/arska/spotipy.git
+	branch = feature-retry-all-requests
