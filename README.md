@@ -20,7 +20,8 @@ Swiss radio SRF has a nicely compiled weekly "rock special" programme that I hav
 ### usage
 see `python srf2spotify.py -h` for parameter usage
 
-* `pip install -r requirements.txt`
+* if you don't want to install dependencies system-wide: `sudo pip install virtualenv; virtualenv venv; source venv/bin/activate`
+* `pip install --allow-all-external -r requirements.txt`
 * register yourself at https://developer.spotify.com/my-applications, enter "http://localhost/" for the "Redirect URIs" (it is fine if you don't have a webserver running)
 * create an `.env` file with the following contents:
 ```
@@ -32,7 +33,9 @@ SPOTIFY_USERNAME='your spotify username'
 ```
 * run the script with `env $(cat .env | xargs) python srf2spotify.py $SPOTIFY_USERNAME <podcast feed url>` (see more options with -h)
 * when first run the script will ask you to authorize the client_id for your spotifyusername by visiting a spotify URL (you will be asked if you want to allow your developer account to access your spotify account), then you will be redirected to your SPOTIPY_REDIRECT_URI with the authorization code appended, e.g. http://localhost/?code=..., copy-and-paste that URL to the terminal
-* copy the contents of `.cache-<spotifyusername>` (`{"access_token": ...}`) into `SPOTIPY_CACHE='{"access_token": ...}'` in `.env` (this is only needed if you want to run `heroku local` or cron.sh)
+* copy the contents of `.cache-<spotifyusername>` (`{"access_token": ...}`) into `SPOTIPY_CACHE='{"access_token": ...}'` in `.env`
+* I like to run my stuff locally with `heroku local:run sh cron.sh`
+* To try stuff faster run `heroku run sh cron.sh` (you need to have set up heroku with all the configuration values from .env separately)
 
 ### result
 * see cron.sh for examples
