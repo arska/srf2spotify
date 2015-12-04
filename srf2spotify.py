@@ -32,12 +32,9 @@ def main(argv=None):
   if args.verbose:
     logging.basicConfig(level=logging.DEBUG)
 
-  logging.debug("got args: %s" % args)
-
   token = spotipy.util.prompt_for_user_token(args.username,'playlist-modify-public')
-  logging.debug("go auth token")
   spotify = spotipy.Spotify(auth=token)
-  logging.debug("logged in to spotify")
+  spotify.trace = True
 
   sync_podcastfeed_with_playlist(feed=args.feed,spotify=spotify,spotifyusername=args.username,playlist_name=args.name,playlist_id=args.id,addonly=args.add,limit=args.limit)
 
