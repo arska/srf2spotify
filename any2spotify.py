@@ -87,30 +87,41 @@ def sync_tracks(songs,targetplaylist,spotifyusername,spotify=spotipy.Spotify,add
 
   # iterate though the playlist and (optionally) delete no longer existing tracks
   playlisttracks = []
+  toremove = []
   #logging.debug("spotify_get_all_trackids %s %s %s" % (spotifyusername,targetplaylist,spotify))
   for track in spotify_get_all_trackids(spotifyusername,targetplaylist,spotify):
     if track not in songs:
+      # the track is in the playlist but no longer in the feed
       if addonly:
         logging.info("not removing %s since --add is specified" % track)
+        playlisttracks.append(track)
       else:
         logging.info("removing %s from playlist because not in feed" % track)
-        spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,[track])
+        toremove.append(track)
     else:
+      # feed song is already in playlist -> all fine
       playlisttracks.append(track)
 
+  # remove all in one go to limit api calls
+  spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,toremove)
+
+  songstoadd = []
   # add podcast songs not already in the playlist
   for song in songs:
     if song not in playlisttracks:
       logging.info("adding %s to playlist" % song)
-      spotify.user_playlist_add_tracks(spotifyusername,targetplaylist,[song])
+      songstoadd.append(song)
+
+  # add all songs in one go to reduce api calls
+  spotify.user_playlist_add_tracks(spotifyusername,targetplaylist,songstoadd)
 
   if limit>0:
     # aggregate the existing playlisttracks and the newly added songs to have the new total number
-    playlisttracks.extend(songs)
+    playlisttracks.extend(songstoadd)
     # only leave the last $limit songs, remove len(playlisttracks)-limit tracks from the start
-    for track in playlisttracks[:-limit]:
-      logging.info("removing %s from playlist because over limit" % track)
-      spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,[track])
+    logging.info("removing %s tracks from playlist because over limit" % len(playlisttracks[:-limit]))
+    logging.debug(playlisttracks[:-limit])
+    spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,playlisttracks[:-limit])
 
 def get_or_create_playlistid_by_name(playlist_name,spotifyusername,spotify):
   """ get a playlist ID from the playlist name of a user, create the playlist if there is none
@@ -166,6 +177,7 @@ def spotify_search_songs(songs,spotify=spotipy.Spotify()):
     if track is not None:
       if track not in results:
         results.append(track)
+        logging.debug("matched %s - %s to %s"%(song['artist'],song['title'],track))
     else:
       logging.warning("no spotify track found for %s" % (song))
   return results
@@ -290,7 +302,7 @@ def multisearch_artist(artist,spotify,recursion=True):
 def cached_search(query,type,spotify):
   """ wrapper around spotipy.Spotify.search() that caches searches """
   key = type + "!" + query
-  if key not in cache:
+  if key not in cache or cache[key] == None:
     logging.debug("search cache miss: %s: %s"%(type,query))
     cache[key] = spotify.search(query,type=type,limit=1)
   else:
