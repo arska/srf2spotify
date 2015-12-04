@@ -302,9 +302,18 @@ def multisearch_artist(artist,spotify,recursion=True):
 def cached_search(query,type,spotify):
   """ wrapper around spotipy.Spotify.search() that caches searches """
   key = type + "!" + query
-  if key not in cache or cache[key] == None:
+  retries = 5
+  if key not in cache:
     logging.debug("search cache miss: %s: %s"%(type,query))
-    cache[key] = spotify.search(query,type=type,limit=1)
+    while retries > 0:
+      retries -= 1
+      try:
+        result = spotify.search(query,type=type,limit=1)
+        if result is not None:
+          cache[key] = result
+          break
+      except:
+        logging.debug("search failed retrying.. %s"%retries)
   else:
     logging.debug("search cache hit: %s: %s"%(type,query))
   return cache[key]
