@@ -177,7 +177,7 @@ def spotify_search_songs(songs,spotify=spotipy.Spotify()):
     if track is not None:
       if track not in results:
         results.append(track)
-        logging.debug("matched %s - %s to %s"%(song['artist'],song['title'],track))
+        logging.debug("matched %s to %s"%(song,track))
     else:
       logging.warning("no spotify track found for %s" % (song))
   return results
@@ -312,8 +312,10 @@ def cached_search(query,type,spotify):
         if result is not None:
           cache[key] = result
           break
+        else:
+          logging.debug("search failed retrying.. %s"%retries)
       except:
-        logging.debug("search failed retrying.. %s"%retries)
+        logging.debug("search exception retrying.. %s"%retries)
   else:
     logging.debug("search cache hit: %s: %s"%(type,query))
   return cache[key]

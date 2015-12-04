@@ -34,7 +34,6 @@ def main(argv=None):
 
   token = spotipy.util.prompt_for_user_token(args.username,'playlist-modify-public')
   spotify = spotipy.Spotify(auth=token)
-  spotify.trace = True
 
   sync_podcastfeed_with_playlist(feed=args.feed,spotify=spotify,spotifyusername=args.username,playlist_name=args.name,playlist_id=args.id,addonly=args.add,limit=args.limit)
 
