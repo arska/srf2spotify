@@ -103,7 +103,8 @@ def sync_tracks(songs,targetplaylist,spotifyusername,spotify=spotipy.Spotify,add
       playlisttracks.append(track)
 
   # remove all in one go to limit api calls
-  spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,toremove)
+  if len(toremove) > 0:
+    spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,toremove)
 
   songstoadd = []
   # add podcast songs not already in the playlist
@@ -113,7 +114,8 @@ def sync_tracks(songs,targetplaylist,spotifyusername,spotify=spotipy.Spotify,add
       songstoadd.append(song)
 
   # add all songs in one go to reduce api calls
-  spotify.user_playlist_add_tracks(spotifyusername,targetplaylist,songstoadd)
+  if len(songstoadd) > 0:
+    spotify.user_playlist_add_tracks(spotifyusername,targetplaylist,songstoadd)
 
   if limit>0:
     # aggregate the existing playlisttracks and the newly added songs to have the new total number
