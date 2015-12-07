@@ -25,6 +25,7 @@ def main(argv=None):
 
   if args.verbose:
     logging.basicConfig(level=logging.DEBUG)
+    logging.getLogger("requests.packages.urllib3.connectionpool").setLevel(logging.WARNING)
 
   logging.debug("got args: %s" % args)
 

@@ -31,7 +31,7 @@ def main(argv=None):
 
   if args.verbose:
     logging.basicConfig(level=logging.DEBUG)
-    logger.getLogger("requests.packages.urllib3.connectionpool"),setLevel(logging.WARNING)
+    logging.getLogger("requests.packages.urllib3.connectionpool").setLevel(logging.WARNING)
 
   token = spotipy.util.prompt_for_user_token(args.username,'playlist-modify-public')
   spotify = spotipy.Spotify(auth=token)
