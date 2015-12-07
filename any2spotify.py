@@ -65,10 +65,9 @@ def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=No
       # use the podcast title if nothing specified
       data = get_podcast_data(feed)
       playlist_name = data['rss']['channel']['title']
-
     targetplaylist = get_or_create_playlistid_by_name(playlist_name,spotifyusername,spotify)
 
-    sync_tracks(songs,targetplaylist,spotifyusername,spotify,addonly,limit)
+  sync_tracks(songs,targetplaylist,spotifyusername,spotify,addonly,limit)
 
 def sync_tracks(songs,targetplaylist,spotifyusername,spotify=spotipy.Spotify,addonly=False,limit=0):
   """ sync a list of spotify song IDs with a spotify playlist
