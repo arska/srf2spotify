@@ -5,13 +5,6 @@ Parse SRF playlogs into spotify playlists
 """
 
 import sys
-#import urllib
-#import urllib2
-#import xmltodict
-#import pprint
-#from dateutil import parser
-#import datetime
-#import json
 import spotipy
 import spotipy.util as util
 import logging
@@ -32,6 +25,8 @@ def main(argv=None):
   if args.verbose:
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger("requests.packages.urllib3.connectionpool").setLevel(logging.WARNING)
+
+  logging.debug(args)
 
   token = spotipy.util.prompt_for_user_token(args.username,'playlist-modify-public')
   spotify = spotipy.Spotify(auth=token)
