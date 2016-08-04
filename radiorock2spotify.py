@@ -23,9 +23,13 @@ def main(argv=None):
   parser.add_argument('-l','--limit',help='limit the total number of tracks in the playist (useful with --add, default=0=no limit)',default=0)
   args = parser.parse_args()
 
-  if args.verbose:
-    logging.basicConfig(level=logging.DEBUG)
-    logging.getLogger("requests.packages.urllib3.connectionpool").setLevel(logging.WARNING)
+logformat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+
+if args.verbose:
+    logging.basicConfig(level=logging.DEBUG, format=logformat)
+else:
+    logging.basicConfig(level=logging.INFO, format=logformat)
+    logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
 
   logging.debug("got args: %s" % args)
 
