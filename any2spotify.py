@@ -399,7 +399,7 @@ def get_datetime_from_podcast(feed):
   """return the (start,end) datetime for episodes from the podcast feed pubDate (=episode ending time) and rounded duration"""
   data = get_podcast_data(feed)
   dates = []
-  for episode in data['rss']['channel']['item']:
+  for episode in data['rss']['channel'].get('item',[]):
     # pubDate: Wed, 28 Oct 2015 22:00:00 +0100
     # itunes:duration: 6590 (seconds)
     end = parser.parse(episode['pubDate'])
