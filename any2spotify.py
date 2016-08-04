@@ -47,7 +47,8 @@ def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=No
 
   if len(songs) == 0:
     # bail out if the list is empty before removing everything
-    sys.exit(1)
+    logging.error("the list of songs from the feed is empty - exiting")
+    sys.exit()
 
   # query spotify for the artist/titles and get the track IDs
   songs = spotify_search_songs(songs,spotify)
@@ -56,7 +57,8 @@ def sync_podcastfeed_with_playlist(feed,spotifyusername,spotify,playlist_name=No
 
   if len(songs) == 0:
     # bail out if the list is empty before removing everything
-    sys.exit(1)
+    logging.error("the list of songs from spotify is empty - exiting")
+    sys.exit()
 
   if playlist_id:
     targetplaylist = playlist_id
