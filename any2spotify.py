@@ -116,7 +116,11 @@ def sync_tracks(songs,targetplaylist,spotifyusername,spotify=spotipy.Spotify,add
 
   # add all songs in one go to reduce api calls
   if len(songstoadd) > 0:
-    spotify.user_playlist_add_tracks(spotifyusername,targetplaylist,songstoadd)
+    offset = 0
+    while offset <= len(songstoadd):
+      logging.debug("adding songs {0} of {1} to {2}".format(offset,len(songstoadd),targetplaylist))
+      spotify.user_playlist_add_tracks(spotifyusername,targetplaylist,songstoadd[offset:(offset+100))
+      offset += 100
 
   if limit>0:
     # aggregate the existing playlisttracks and the newly added songs to have the new total number
@@ -124,7 +128,11 @@ def sync_tracks(songs,targetplaylist,spotifyusername,spotify=spotipy.Spotify,add
     # only leave the last $limit songs, remove len(playlisttracks)-limit tracks from the start
     logging.info("removing %s tracks from playlist because over limit" % len(playlisttracks[:-limit]))
     logging.debug(playlisttracks[:-limit])
-    spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,playlisttracks[:-limit])
+    offset = 0
+    while offset <= len(playlisttracks[:-limit]):
+      logging.debug("removing songs {0} of {1} from {2}".format(offset,len(playlisttracks[:-limit]),targetplaylist))
+      spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,playlisttracks[:-limit][offset:(offset+100)])
+      offset += 100
 
 def get_or_create_playlistid_by_name(playlist_name,spotifyusername,spotify):
   """ get a playlist ID from the playlist name of a user, create the playlist if there is none
