@@ -1,11 +1,11 @@
 #!/bin/sh
 # sync the swiss radio feeds daily, the resulting spotify playlists are public so you can just use them
-
+date
 # set the spotify-credentials from the environment variable, see README
 echo $SPOTIPY_CACHE > .cache-$SPOTIFY_USERNAME
 
 # abort if one of the commands fail to check the logs
-set -e
+#set -e
 
 python srf2spotify.py -a $@ --id 6Mcg2gNk9b9u9g2HCmUcy5 $SPOTIFY_USERNAME http://podcasts.srf.ch/black-music_special_mpx.xml
 # https://open.spotify.com/user/$SPOTIFY_USERNAME/playlist/6Mcg2gNk9b9u9g2HCmUcy5
@@ -33,3 +33,5 @@ python srf2spotify.py -a $@ --id 3K9MLAIkBey8i1GSCQ95NF $SPOTIFY_USERNAME http:/
 
 python radiorock2spotify.py -a $@ $SPOTIFY_USERNAME http://www.radiorock.fi/api/programdata/getlatest
 # see code or README.md for links
+
+date

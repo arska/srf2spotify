@@ -1,6 +1,8 @@
 #!/bin/sh
 # sync the jouluradio feeds hourly since the last20-sing-feeds cover about an hour of airtime, the resulting spotify playlists are public so you can just use them
 
+date
+
 # set the spotify-credentials from the environment variable, see README
 echo $SPOTIPY_CACHE > .cache-$SPOTIFY_USERNAME
 
@@ -21,3 +23,5 @@ echo $SPOTIPY_CACHE > .cache-$SPOTIFY_USERNAME
 
 #python jouluradio2spotify.py -a $@ --id 11GKkK9iKKWP4Y0zV9teo7 $SPOTIFY_USERNAME http://www.jouluradio.fi/biisilista/klassinenjoululast20.json
 # https://open.spotify.com/user/aarnoaukia/playlist/11GKkK9iKKWP4Y0zV9teo7
+
+date
