@@ -110,7 +110,7 @@ def sync_tracks(songs,targetplaylist,spotifyusername,spotify=spotipy.Spotify,add
     offset = 0
     while offset <= len(toremove):
       logging.debug("removing songs {0} of {1} from {2}".format(offset,len(toremove),targetplaylist))
-      spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,toremove[offset:(offset+100))
+      spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,toremove[offset:(offset+100)])
       offset += 100
 
   songstoadd = []
@@ -125,7 +125,7 @@ def sync_tracks(songs,targetplaylist,spotifyusername,spotify=spotipy.Spotify,add
     offset = 0
     while offset <= len(songstoadd):
       logging.debug("adding songs {0} of {1} to {2}".format(offset,len(songstoadd),targetplaylist))
-      spotify.user_playlist_add_tracks(spotifyusername,targetplaylist,songstoadd[offset:(offset+100))
+      spotify.user_playlist_add_tracks(spotifyusername,targetplaylist,songstoadd[offset:(offset+100)])
       offset += 100
 
   if limit>0:
