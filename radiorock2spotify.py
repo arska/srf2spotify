@@ -74,11 +74,15 @@ else:
   ]
 
   songmap = {}
-  for song in get_radiorock_songlog():
+  songlog = get_radiorock_songlog()
+  logging.info("got {0} songs".format(len(songlog)))
+  logging.debug(songlog)
+  for song in songlog:
     playlist = get_playlist_for_timestamp(song['timestamp'],playlistmap)
     if playlist not in songmap:
       songmap[playlist] = []
     songmap[playlist].append(song)
+  logging.debug("all songs assigned, syncing playlists")
   for playlist in songmap.keys():
     sync_tracks(spotify_search_songs(songmap[playlist],spotify),playlist,args.username,spotify,addonly=args.add,limit=args.limit)
 
