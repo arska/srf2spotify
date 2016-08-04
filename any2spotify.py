@@ -86,6 +86,8 @@ def sync_tracks(songs,targetplaylist,spotifyusername,spotify=spotipy.Spotify,add
   # the rest has to be spotify.user_playlist_add_tracks() manually
   # so we're adding/deleting them ourselves
 
+  logging.debug("synching playlist {0}".format(targetplaylist))
+
   # iterate though the playlist and (optionally) delete no longer existing tracks
   playlisttracks = []
   toremove = []
@@ -105,7 +107,11 @@ def sync_tracks(songs,targetplaylist,spotifyusername,spotify=spotipy.Spotify,add
 
   # remove all in one go to limit api calls
   if len(toremove) > 0:
-    spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,toremove)
+    offset = 0
+    while offset <= len(toremove):
+      logging.debug("removing songs {0} of {1} from {2}".format(offset,len(toremove),targetplaylist))
+      spotify.user_playlist_remove_all_occurrences_of_tracks(spotifyusername,targetplaylist,toremove[offset:(offset+100))
+      offset += 100
 
   songstoadd = []
   # add podcast songs not already in the playlist
