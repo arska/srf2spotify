@@ -26,10 +26,10 @@ def main(argv=None):
 logformat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
 if args.verbose:
-    logging.basicConfig(level=logging.DEBUG, format=logformat)
+  logging.basicConfig(level=logging.DEBUG, format=logformat)
 else:
-    logging.basicConfig(level=logging.INFO, format=logformat)
-    logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
+  logging.basicConfig(level=logging.INFO, format=logformat)
+  logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
 
   logging.debug("got args: %s" % args)
 
