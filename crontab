@@ -1,0 +1,2 @@
+0 0 * * * sh daily.sh
+0 * * * * sh hourly.sh
