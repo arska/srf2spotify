@@ -84,7 +84,7 @@ def main(argv=None):
     songmap[playlist].append(song)
   logging.debug("all songs assigned, syncing playlists")
   for playlist in songmap.keys():
-    logging.debug("syncing playlist {0}".format(x for x in songmap where x['playlist'] == playlist))
+    logging.debug("syncing playlist {0}".format(x for x in songmap if x['playlist'] == playlist))
     sync_tracks(spotify_search_songs(songmap[playlist],spotify),playlist,args.username,spotify,addonly=args.add,limit=args.limit)
 
 if __name__ == "__main__":
