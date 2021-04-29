@@ -1,0 +1,15 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "02:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: cachetools
+    versions:
+    - 4.2.1
+  - dependency-name: pytz
+    versions:
+    - "2020.5"
