@@ -6,6 +6,6 @@ python-dateutil==2.8.2
 pytz==2019.3
 requests==2.26.0
 six==1.16.0
-wheel==0.33.6
+wheel==0.37.0
 xmltodict==0.12.0
 ./spotipy/
